@@ -43,8 +43,8 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation files('libs\\jcifs-ng-2.1.9.jar')
     implementation files('libs\\slf4j-api-2.0.9.jar')
-    implementation 'org.bouncycastle:bcpkix-jdk15on:1.70'
-    implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
+    implementation files('libs\\bcpkix-jdk15on-1.70.jar')
+    implementation files('libs\\bcprov-jdk15on-1.70.jar')
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
