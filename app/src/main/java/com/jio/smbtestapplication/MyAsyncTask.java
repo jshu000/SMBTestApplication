@@ -111,9 +111,9 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
             Log.d(TAG, "func: smbexception-"+e);
             e.printStackTrace();
         }
-        SmbHelper smbHelper=new SmbHelper();
+        /*SmbHelper smbHelper=new SmbHelper();
         smbHelper.connectAndReadWrite("192.168.29.159",
-                "smbtest", "smbtest","tarun");
+                "smbtest", "smbtest","tarun");*/
 
 
     }
@@ -133,7 +133,7 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
         // Update UI or handle results after the background operation completes
     }
 }
-public class SmbHelper {
+/*public class SmbHelper {
 
     public static void connectAndReadWrite(String ipAddress, String username, String password, String filePath) {
         NtlmPasswordAuthentication auth = new NtlmPasswordAuthentication(null,"smbtest", "smbtest");
@@ -164,4 +164,4 @@ public class SmbHelper {
             }
         }
     }
-}
+}*/
