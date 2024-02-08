@@ -8,6 +8,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -17,7 +18,9 @@ import java.util.Arrays;
 
 import jcifs.CIFSContext;
 import jcifs.Config;
+import jcifs.context.BaseContext;
 import jcifs.context.SingletonContext;
+import jcifs.internal.SmbBasicFileInfo;
 import jcifs.internal.util.SMBUtil;
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.NtlmPasswordAuthenticator;
@@ -34,6 +37,10 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
     public static final char SLASH = '/';
     public static final char COLON = ':';
     public static final String SMB_URI_PREFIX= "smb://";
+    public static final String user="smbtest";
+    public static final String pass="smbtest";
+    public static final String ip="192.168.1.33";
+    public static final String smbpath= "smb://192.168.1.33/tarun";
 
     @Override
     protected Void doInBackground(Void... voids) {
@@ -78,13 +85,8 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
 
         Log.d(TAG, "func: ");
         String smbpath= "smb://smbtest:smbtest@192.168.29.159/";
-        SmbFile smbFile = createSMBPath(new String[] {"192.168.29.159", "smbtest", "smbtest", "", "tarun"}, false, false);
+        SmbFile smbFile = createSMBPath(new String[] {"192.168.1.33", "smbtest", "smbtest", "", "tarun"}, false, false);
 
-        try {
-            smbFile.connect();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
 
         Log.d(TAG, "func: SMBFILEcreated-"+smbFile.toString());
@@ -98,7 +100,6 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
             Log.d(TAG, "func: SMBFILE is directory-"+smbFile.isDirectory());
             Log.d(TAG, "func: SMBFILE is directory-"+smbFile.getLastModified());
             Log.d(TAG, "func: SMBFILE is directory-"+smbFile.getDate());
-            Log.d(TAG, "func: SMBFILE is directory-"+smbFile.getShare());
 
         } catch (SmbException e) {
             Log.d(TAG, "func: smbexception-"+e);
@@ -106,7 +107,19 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
         }
         try {
             Log.d(TAG, "func: before send request");
-            sendRequest();
+            Thread thread2 = new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    try {
+                        sendRequest();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            thread2.start();
+
         } catch (Exception e) {
             Log.d(TAG, "func: smbexception-"+e);
             e.printStackTrace();
@@ -119,12 +132,92 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
     }
     public static void sendRequest() throws Exception {
         CIFSContext base = SingletonContext.getInstance();
-        CIFSContext authed1 = base.withCredentials(new NtlmPasswordAuthentication(base, "192.168.29.159",
+        CIFSContext authed2 = base.withCredentials(new NtlmPasswordAuthenticator("",
                 "smbtest", "smbtest"));
-        try (SmbFile f = new SmbFile("smb://192.168.29.159/tarun/", authed1)) {
-            Log.d(TAG, "func: SMBFILE is filename-"+f.getPath());
+        /*CIFSContext authed1 = base.withCredentials(new NtlmPasswordAuthentication(base, "",
+                "smbtest", "smbtest"));*/
+        try {
+            //CIFSContext baseContext = new BaseContext(base.getConfig());
+            //NtlmPasswordAuthenticator authenticator = new NtlmPasswordAuthenticator(null, "smbtest", "password");
+
+            SmbFile smbFile = new SmbFile(smbpath, authed2);
+
+            Log.d(TAG, "sendRequest: smbfile created");
+            if (smbFile.exists()) {
+                if (smbFile.isDirectory()) {
+
+                    Log.d(TAG, "sendRequest: Listing contents of the directory:");
+                    System.out.println("Listing contents of the directory:");
+                    for (SmbFile file : smbFile.listFiles()) {
+                        Log.d(TAG, "sendRequest: file name -"+file.getName());
+                        System.out.println(file.getName());
+                    }
+                } else {
+                    System.out.println("Downloading file...");
+                    try (InputStream in = smbFile.getInputStream();
+                         OutputStream out = new FileOutputStream("tarun")) {
+                        byte[] buffer = new byte[8192];
+                        int len;
+                        while ((len = in.read(buffer)) != -1) {
+                            out.write(buffer, 0, len);
+                        }
+                        System.out.println("File downloaded successfully!");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } else {
+                System.out.println("SMB file does not exist.");
+            }
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (SmbException e) {
+            e.printStackTrace();
+        }
+        /*try  {
+            SmbFile f = new SmbFile(smbpath, authed1);
+            Log.d(TAG, "sendRequest: auth1-"+f.getPath());
+            Log.d(TAG, "sendRequest: auth1-"+f.getName());
+            Log.d(TAG, "sendRequest: auth1-"+f.getLastModified());
+            Log.d(TAG, "func: SMBFILE is auth1 filename-"+f.getPath());
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        try  {
+            SmbFile f = new SmbFile(smbpath, authed2);
+            Log.d(TAG, "sendRequest: auth1-"+f.getPath());
+            Log.d(TAG, "sendRequest: auth1-"+f.getName());
+            Log.d(TAG, "sendRequest: auth1-"+f.getLastModified());
+            Log.d(TAG, "func: SMBFILE is auth1 filename-"+f.getPath());
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        try (SmbFile f = new SmbFile("smb://192.168.1.33/tarun/", authed1)) {
+            Log.d(TAG, "sendRequest: auth1-"+f.getPath());
+            Log.d(TAG, "sendRequest: auth1-"+f.getName());
+            f.createNewFile();
+            Log.d(TAG, "sendRequest: auth1 getLastModified()-");
+            Log.d(TAG, "func: SMBFILE is auth1 filename-"+f.getPath());
 
         }
+        try {
+            SmbFile f = new SmbFile("smb://192.168.1.33/tarun/", authed2);
+            Log.d(TAG, "sendRequest: auth2-"+f.getPath());
+            Log.d(TAG, "sendRequest: auth2-"+f.getName());
+            Log.d(TAG, "func: SMBFILE is auth2 filename-"+f.getPath());
+            Log.d(TAG, "sendRequest: auth2-"+f.getLastModified());
+            *//*SmbFile[] files = f.listFiles();
+
+            // Print the names of the files
+            for (SmbFile file : files) {
+                System.out.println(file.getName());
+            }*//*
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }*/
+
 
     }
 
