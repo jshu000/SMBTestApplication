@@ -2,11 +2,14 @@ package com.jio.smbtestapplication;
 
 import static java.net.URLEncoder.encode;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
+
+import androidx.annotation.NonNull;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -41,6 +44,7 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
     public static final String pass="smbtest";
     public static final String ip="192.168.29.159";
     public static final String smbpath= "smb://192.168.29.159/";
+    private static SmbFile rootsmb = null;
 
     @Override
     protected Void doInBackground(Void... voids) {
@@ -65,6 +69,7 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
         try {
 
             SmbFile smbFile = new SmbFile(smbpath, authed2);
+            rootsmb= smbFile;
 
             Log.d(TAG, "sendRequest: smbfile created");
             if (smbFile.exists()) {
@@ -99,5 +104,37 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
             e.printStackTrace();
         }
     }
+    public boolean setLastModified(final long date) {
+            try {
+                SmbFile smbFile = rootsmb;
+                if (smbFile != null) {
+                    smbFile.setLastModified(date);
+                    Log.d(TAG, "sendRequest: smbfile setlastmodified-"+date);
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (SmbException e) {
+                Log.d(TAG, "sendRequest: smbfile Exception-"+e);
+                return false;
+            }
+        }
+    public void mkdir(Context context) {
+            try {
+                rootsmb.mkdirs();
+            } catch (SmbException e) {
+                Log.d(TAG, "sendRequest: smbfile Exception-"+e);
+            }
+    }
+    public boolean delete(Context context, boolean rootmode)
+            throws SmbException {
+        try {
+            rootsmb.delete();
+            return true;
+        } catch (SmbException e) {
+            Log.d(TAG, "sendRequest: smbfile Exception-"+e);
+            throw e;
+        }
 
+    }
 }
