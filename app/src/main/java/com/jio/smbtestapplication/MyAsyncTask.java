@@ -45,7 +45,7 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
     public static final String user="smbtest";
     public static final String pass="smbtest";
     public static final String ip="192.168.29.159";
-    public static final String smbpath= "smb://192.168.29.159/tarun/test.txt";
+    public static final String smbpath= "smb://192.168.29.159/tarun/image2.jpg";
     private static SmbFile rootsmb = null;
     private static final int PERMISSION_REQUEST_CODE = 123;
     @Override
@@ -74,7 +74,23 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
             String localFilePath = "/path/to/save/local/file";
             String root = String.valueOf(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
             localFilePath=root;
-            localFilePath = localFilePath + "/tt.txt";           //path where file is saved in local Android. It must be created first.
+            String filePath = root+"img.jpg"; // Change this to your desired file path
+
+            File file2 = new File(filePath);
+
+            try {
+                if (file2.createNewFile()) {
+                    Log.d(TAG, "sendRequest: new file created");
+                    System.out.println("File created: " + file2.getName());
+                } else {
+                    Log.d(TAG, "sendRequest: file alreadyexist");
+                    System.out.println("File already exists.");
+                }
+            } catch (IOException e) {
+                System.out.println("An error occurred.");
+                e.printStackTrace();
+            }
+            localFilePath = localFilePath + "/img.jpg";           //path where file is saved in local Android. It must be created first.
 
 
             try {
