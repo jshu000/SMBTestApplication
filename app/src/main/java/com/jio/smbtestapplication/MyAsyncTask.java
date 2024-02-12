@@ -45,7 +45,7 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
     public static final String user="smbtest";
     public static final String pass="smbtest";
     public static final String ip="192.168.29.159";
-    public static final String smbpath= "smb://192.168.29.159/tarun/";
+    public static final String smbpath= "smb://192.168.29.159/tarun/test.txt";
     private static SmbFile rootsmb = null;
     private static final int PERMISSION_REQUEST_CODE = 123;
     @Override
@@ -74,43 +74,35 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
             String localFilePath = "/path/to/save/local/file";
             String root = String.valueOf(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
             localFilePath=root;
-            localFilePath = localFilePath + "/recording";
+            localFilePath = localFilePath + "/tt.txt";           //path where file is saved in local Android. It must be created first.
 
-            OutputStream outputStream = null;
-            InputStream inputStream = null;
 
             try {
                 Log.d(TAG, "sendRequest: inside try download");
 
-                File localFile = new File(localFilePath);
-                localFile.getParentFile().mkdirs(); // create parent directories if they don't exist
-                outputStream = new FileOutputStream(localFile);
-                inputStream = smbFile.getInputStream();
+                SmbFileInputStream inputSmbFileStream = (SmbFileInputStream) new SmbFileInputStream(smbFile);
 
-                byte[] buffer = new byte[8192];
-                int bytesRead;
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, bytesRead);
+                Log.d(TAG, "sendRequest: inside try download input stream created");
+                File localFile = new File(localFilePath);
+                FileOutputStream outputFileStream = new FileOutputStream(localFile);
+                Log.d(TAG, "sendRequest: inside try download output stream created");
+
+                byte[] buffer = new byte[4096];
+                Log.d(TAG, "sendRequest: inside try download output stream buffer-"+buffer);
+                int length = 0;
+                while ((length = inputSmbFileStream.read(buffer)) >= 0) {
+                    Log.d(TAG, "sendRequest: inside try download output stream length-"+length);
+                    outputFileStream.write(buffer, 0, length);
                 }
-                System.out.println("File downloaded successfully.");
+
+                outputFileStream.close();
+                inputSmbFileStream.close();
                 System.out.println("File downloaded successfully.");
                 Log.d(TAG, "sendRequest: inside try download closing");
-            } catch (IOException e) {
+            } catch (SmbException e) {
                 Log.d(TAG, "sendRequest: inside try download exception-"+e);
                 e.printStackTrace();
-            } finally {
-                try {
-                    if (inputStream != null) {
-                        inputStream.close();
-                    }
-                    if (outputStream != null) {
-                        outputStream.close();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
             }
-
             Log.d(TAG, "sendRequest: smbfile created");
             if (smbFile.exists()) {
                 if (smbFile.isDirectory()) {
