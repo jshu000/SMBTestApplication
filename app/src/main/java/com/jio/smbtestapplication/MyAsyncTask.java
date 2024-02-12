@@ -4,6 +4,7 @@ import static java.net.URLEncoder.encode;
 
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
@@ -11,6 +12,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,9 +45,9 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
     public static final String user="smbtest";
     public static final String pass="smbtest";
     public static final String ip="192.168.29.159";
-    public static final String smbpath= "smb://192.168.29.159/";
+    public static final String smbpath= "smb://192.168.29.159/tarun/";
     private static SmbFile rootsmb = null;
-
+    private static final int PERMISSION_REQUEST_CODE = 123;
     @Override
     protected Void doInBackground(Void... voids) {
         Config.registerSmbURLHandler();
@@ -69,7 +71,45 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
         try {
 
             SmbFile smbFile = new SmbFile(smbpath, authed2);
-            rootsmb= smbFile;
+            String localFilePath = "/path/to/save/local/file";
+            String root = String.valueOf(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
+            localFilePath=root;
+            localFilePath = localFilePath + "/recording";
+
+            OutputStream outputStream = null;
+            InputStream inputStream = null;
+
+            try {
+                Log.d(TAG, "sendRequest: inside try download");
+
+                File localFile = new File(localFilePath);
+                localFile.getParentFile().mkdirs(); // create parent directories if they don't exist
+                outputStream = new FileOutputStream(localFile);
+                inputStream = smbFile.getInputStream();
+
+                byte[] buffer = new byte[8192];
+                int bytesRead;
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
+                System.out.println("File downloaded successfully.");
+                System.out.println("File downloaded successfully.");
+                Log.d(TAG, "sendRequest: inside try download closing");
+            } catch (IOException e) {
+                Log.d(TAG, "sendRequest: inside try download exception-"+e);
+                e.printStackTrace();
+            } finally {
+                try {
+                    if (inputStream != null) {
+                        inputStream.close();
+                    }
+                    if (outputStream != null) {
+                        outputStream.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
 
             Log.d(TAG, "sendRequest: smbfile created");
             if (smbFile.exists()) {
