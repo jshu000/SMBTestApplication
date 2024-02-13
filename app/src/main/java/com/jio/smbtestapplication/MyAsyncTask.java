@@ -13,6 +13,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,7 +46,7 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
     public static final String user="smbtest";
     public static final String pass="smbtest";
     public static final String ip="192.168.29.159";
-    public static final String smbpath= "smb://192.168.29.159/tarun/image2.jpg";
+    public static final String smbpath= "smb://192.168.29.159/tarun/image1.jpg";
     private static SmbFile rootsmb = null;
     private static final int PERMISSION_REQUEST_CODE = 123;
     @Override
@@ -74,7 +75,8 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
             String localFilePath = "/path/to/save/local/file";
             String root = String.valueOf(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
             localFilePath=root;
-            String filePath = root+"img.jpg"; // Change this to your desired file path
+            smbFile.getName();
+            String filePath = root+smbFile.getName(); // Change this to your desired file path
 
             File file2 = new File(filePath);
 
@@ -90,7 +92,7 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
                 System.out.println("An error occurred.");
                 e.printStackTrace();
             }
-            localFilePath = localFilePath + "/img.jpg";           //path where file is saved in local Android. It must be created first.
+            localFilePath = localFilePath + "/"+smbFile.getName();           //path where file is saved in local Android. It must be created first.
 
 
             try {
@@ -107,7 +109,7 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
                 Log.d(TAG, "sendRequest: inside try download output stream buffer-"+buffer);
                 int length = 0;
                 while ((length = inputSmbFileStream.read(buffer)) >= 0) {
-                    Log.d(TAG, "sendRequest: inside try download output stream length-"+length);
+                    //Log.d(TAG, "sendRequest: inside try download output stream length-"+length);
                     outputFileStream.write(buffer, 0, length);
                 }
 
@@ -117,6 +119,32 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
                 Log.d(TAG, "sendRequest: inside try download closing");
             } catch (SmbException e) {
                 Log.d(TAG, "sendRequest: inside try download exception-"+e);
+                e.printStackTrace();
+            }
+            try {
+                Log.d(TAG, "sendRequest: inside try upload");
+
+                File localFile = new File(localFilePath);
+                FileInputStream inputFileStream = new FileInputStream(localFile);
+
+                Log.d(TAG, "sendRequest: inside try upload input stream created");
+                SmbFileOutputStream outputFileStream = (SmbFileOutputStream) new SmbFileOutputStream(smbFile);
+                Log.d(TAG, "sendRequest: inside try upload output stream created");
+
+                byte[] buffer = new byte[4096];
+                Log.d(TAG, "sendRequest: inside try upload output stream buffer-"+buffer);
+                int length = 0;
+                while ((length = inputFileStream.read(buffer)) >= 0) {
+                    Log.d(TAG, "sendRequest: inside try upload output stream length-"+length);
+                    outputFileStream.write(buffer, 0, length);
+                }
+
+                outputFileStream.close();
+                inputFileStream.close();
+                System.out.println("File uploaded successfully.");
+                Log.d(TAG, "sendRequest: inside try upload closing");
+            } catch (SmbException e) {
+                Log.d(TAG, "sendRequest: inside try upload exception-"+e);
                 e.printStackTrace();
             }
             Log.d(TAG, "sendRequest: smbfile created");
@@ -166,7 +194,7 @@ public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
                 Log.d(TAG, "sendRequest: smbfile Exception-"+e);
                 return false;
             }
-        }
+    }
     public void mkdir(Context context) {
             try {
                 rootsmb.mkdirs();
